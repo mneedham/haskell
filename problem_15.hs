@@ -18,18 +18,19 @@ reached_destination (origin_x, origin_y) (dest_x, dest_y)  = origin_x == dest_x 
 
 routes :: (Int, Int) -> Int -> Int
 routes origin size =
-	inner origin size
+	arr ! (size, size)
 	where
+		arr = array ((0,0),(size,size)) [((x,y),inner (x,y) size) | x<-[0..size], y<-[0..size]]
 		inner origin@(x, y) size 
-			| x == size && y == size = 0
-			| x == size || y == size = 1
-			| otherwise = inner (x+1, y) size + inner (x, y+1) size
+			| x == 0 && y == 0 = 0
+			| x == 0 || y == 0 = 1
+			| otherwise = arr ! (x-1, y) + arr ! (x, y-1)
 
 --memoize_grid :: Int -> [[Maybe Int]]
 --memoize_grid size = [[Nothing | x <- [1..20]] | y <- [1..size]]
 
 
-memoize_grid size = array ((0,0),(size-1,size-1)) [((x,y),Nothing) | x<-[0..size-1], y<-[0..size-1]] 
+memoize_grid size = array ((0,0),(size,size)) [((x,y),Nothing) | x<-[0..size], y<-[0..size]] 
 
 
 
