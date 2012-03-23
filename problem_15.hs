@@ -24,4 +24,9 @@ routes origin size =
 			| otherwise = inner (x+1, y) size + inner (x, y+1) size
 
 memoize_grid :: Int -> [[Maybe Int]]
-memoize_grid size = [[Nothing | x <- [1..20]] | y <- [1..size]]	
+memoize_grid size = [[Nothing | x <- [1..20]] | y <- [1..size]]
+
+
+a1 = array (0, 5) [(x, Nothing) | x <- [0..5]]
+
+b = array ((0,0),(19,19)) [((x,y),Nothing) | x<-[0..19], y<-[0..19]] 
