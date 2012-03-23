@@ -1,3 +1,5 @@
+import Data.Array
+
 routes_through_grid :: Int -> [[(Int, Int)]]
 routes_through_grid size = [[(1,2)], [(1,2)]]
 
@@ -23,8 +25,12 @@ routes origin size =
 			| x == size || y == size = 1
 			| otherwise = inner (x+1, y) size + inner (x, y+1) size
 
-memoize_grid :: Int -> [[Maybe Int]]
-memoize_grid size = [[Nothing | x <- [1..20]] | y <- [1..size]]
+--memoize_grid :: Int -> [[Maybe Int]]
+--memoize_grid size = [[Nothing | x <- [1..20]] | y <- [1..size]]
+
+
+memoize_grid size = array ((0,0),(size-1,size-1)) [((x,y),Nothing) | x<-[0..size-1], y<-[0..size-1]] 
+
 
 
 a1 = array (0, 5) [(x, Nothing) | x <- [0..5]]
