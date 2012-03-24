@@ -16,11 +16,11 @@ routes_through_grid size = [[(1,2)], [(1,2)]]
 reached_destination :: (Int, Int) -> (Int, Int) -> Bool
 reached_destination (origin_x, origin_y) (dest_x, dest_y)  = origin_x == dest_x && origin_y == dest_y 
 
-routes :: (Int, Int) -> Int -> Int
-routes origin size =
+routes :: Int -> Int
+routes size =
 	arr ! (size, size)
 	where
-		arr = array ((0,0),(size,size)) [((x,y),inner (x,y) size) | x<-[0..size], y<-[0..size]]
+		arr = array ((0,0),(size,size)) [((x,y), inner (x,y) size) | x<-[0..size], y<-[0..size]]
 		inner origin@(x, y) size 
 			| x == 0 && y == 0 = 0
 			| x == 0 || y == 0 = 1
