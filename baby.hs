@@ -1,6 +1,8 @@
 import Data.Foldable
 
-data CarParkState = Available Bool Int Int | AlmostFull Bool Int Int | Full Bool Int deriving (Show)
+data CarParkState = Available  { changed :: Bool, normalSpaces :: Int, handicapSpaces :: Int } | 
+                    AlmostFull { changed :: Bool, normalSpaces :: Int, handicapSpaces :: Int } | 
+                    Full       { changed :: Bool, handicapSpaces :: Int } deriving (Show)
 data Action = Entering | Leaving deriving (Show) 
 data Sticker = Handicap | None deriving (Show) 
 
@@ -23,11 +25,11 @@ handicap_changed :: Int -> (Int -> Int) -> Bool
 handicap_changed initialHandicap changeFn = changeFn(initialHandicap) == 4 || initialHandicap == 4
 
 car_park_state :: CarParkState -> (Action, Sticker) -> CarParkState
-car_park_state (Available _ 8 handicap) (Entering, None) = AlmostFull True 9 handicap
-car_park_state (AlmostFull _ 11 handicap) (Entering, None) = Full True handicap
-car_park_state (AlmostFull _ 9 handicap) (Leaving, None) = Available True 8 handicap
+car_park_state state@(Available  {normalSpaces=8})  (Entering, None) = AlmostFull True 9 (handicapSpaces state)
+car_park_state state@(AlmostFull {normalSpaces=11}) (Entering, None) = Full True (handicapSpaces state)
+car_park_state state@(AlmostFull {normalSpaces=9})  (Leaving, None)  = Available True 8 (handicapSpaces state)
 
-car_park_state (Full _ handicap) (Leaving, None) = AlmostFull True 11 handicap
+car_park_state state@(Full{}) (Leaving, None) = AlmostFull True 11 (handicapSpaces state)
 car_park_state (Full _ handicap) (Leaving, Handicap) = Full True handicap
 car_park_state (Full _ _) _ = error "The car park is already full!"
 
