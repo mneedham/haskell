@@ -1,34 +1,63 @@
 import System.Random
+import Data.List
 
-data PointWinner = Player1 | Player2 deriving (Show)
-
+data Player = Player1 | Player2 deriving (Show)
 data PointScore = Love | Fifteen | Thirty | Forty deriving (Show)
+data GameScore = Normal PointScore PointScore | Deuce | Advantage Player | Game Player deriving (Show)
+data SetScore = NormalSetScore Int Int | Set Player deriving (Show)
+data MatchScore = NormalMatchScore Int Int | Match Player deriving (Show)
 
-data GameScore = Normal PointScore PointScore | Deuce | Advantage PointWinner | Game PointWinner deriving (Show)
+data Overall = OverallScore MatchScore SetScore GameScore deriving (Show)
 
-updateScore :: GameScore -> PointWinner -> GameScore
+updateMatchScore :: MatchScore -> Player -> MatchScore
+updateMatchScore (NormalMatchScore player1 player2) Player1  = NormalMatchScore (player1 + 1) player2
+updateMatchScore (NormalMatchScore player1 player2) Player2  = NormalMatchScore player1 (player2 + 1)
 
-updateScore (Advantage Player1) Player1 = Game Player1
-updateScore (Advantage Player2) Player2 = Game Player2
-updateScore (Advantage Player2) Player1 = Deuce
-updateScore (Advantage Player1) Player2 = Deuce
+updateSetScore :: SetScore -> Player -> SetScore
+updateSetScore (NormalSetScore player1 player2) Player1  | player1 >=4 && player2 >=4 && player1 > player2 = Set Player1 
+updateSetScore (NormalSetScore player1 player2) Player2  | player1 >=4 && player2 >=4 && player2 > player1 = Set Player2 
+updateSetScore (NormalSetScore player1 5) Player1  = Set Player1
+updateSetScore (NormalSetScore player1 5) Player2  = Set Player2
 
-updateScore (Deuce) player = Advantage player
+updateSetScore (NormalSetScore player1 player2) Player1  = NormalSetScore (player1 + 1) player2
+updateSetScore (NormalSetScore player1 player2) Player2  = NormalSetScore player1 (player2 + 1)
 
-updateScore (Normal Thirty Forty) Player1 = Deuce
-updateScore (Normal Forty Thirty) Player2 = Deuce
+newGame = (Normal Love Love)
+newSet = (NormalSetScore 0 0)
 
-updateScore (Normal Love player2) Player1 = Normal Fifteen player2
-updateScore (Normal Fifteen player2) Player1 = Normal Thirty player2
-updateScore (Normal Thirty player2) Player1 = Normal Forty player2
-updateScore (Normal Forty _) Player1 = Game Player1
+updatePointScore :: GameScore -> Player -> GameScore
+updatePointScore (Advantage Player2) Player1 = Deuce
+updatePointScore (Advantage Player1) Player2 = Deuce
 
-updateScore (Normal player1 Love) Player2 = Normal player1 Fifteen
-updateScore (Normal player1 Fifteen) Player2 = Normal player1 Thirty
-updateScore (Normal player1 Thirty) Player2 = Normal player1 Forty
-updateScore (Normal player1 Forty) Player2 = Game Player2
+updatePointScore (Deuce) player = (Advantage player)
 
-updateScore (Game _) _ = error "Game is finished!"
+updatePointScore (Normal Thirty Forty) Player1 = Deuce
+updatePointScore (Normal Forty Thirty) Player2 = Deuce
 
-rand :: IO Int
-rand = getStdRandom (randomR (1, 10))
+updatePointScore (Normal Love player2) Player1 =  (Normal Fifteen player2)
+updatePointScore (Normal Fifteen player2) Player1 = (Normal Thirty player2)
+updatePointScore (Normal Thirty player2) Player1 = (Normal Forty player2)
+
+updatePointScore (Normal player1 Love) Player2 = (Normal player1 Fifteen)
+updatePointScore (Normal player1 Fifteen) Player2 = (Normal player1 Thirty)
+updatePointScore (Normal player1 Thirty) Player2 = (Normal player1 Forty)
+
+update :: Overall -> Player -> Overall
+update (OverallScore matchScore (NormalSetScore player1 player2) _) Player1
+	| player1 >=4 && player2 >=4 && player1 > player2 = OverallScore (updateMatchScore matchScore Player1) newSet newGame
+	| player1 >=4 && player2 >=4 && player2 > player1 = OverallScore (updateMatchScore matchScore Player2) newSet newGame
+
+update (OverallScore matchScore setScore (Advantage Player1)) Player1 = OverallScore matchScore (updateSetScore setScore Player1) newGame
+update (OverallScore matchScore setScore (Advantage Player2)) Player2 = OverallScore matchScore (updateSetScore setScore Player2) newGame
+update (OverallScore matchScore setScore (Normal player1 Forty)) Player2 = OverallScore matchScore (updateSetScore setScore Player2) newGame
+update (OverallScore matchScore setScore (Normal Forty _)) Player1 = OverallScore matchScore (updateSetScore setScore Player1) newGame
+
+update (OverallScore matchScore setScore gameScore) player = OverallScore matchScore setScore (updatePointScore gameScore player)
+
+noScore = OverallScore (NormalMatchScore 0 0) (NormalSetScore 0 0) (Normal Love Love)
+go = Prelude.scanl (\score  point -> update score point) noScore player1MostlyWins
+
+player1MostlyWins = Data.List.foldl (++) []  [[Player1, Player2, Player1] | x <- [1..100]]
+
+--how do I generate a sequence of Player1's?
+--how do I alternate between Player1 winning and then Player2?
