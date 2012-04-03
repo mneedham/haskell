@@ -16,16 +16,23 @@ updateMatchScore (NormalMatchScore player1 player2) Player2  = NormalMatchScore 
 updateSetScore :: SetScore -> Player -> SetScore
 updateSetScore (NormalSetScore player1 player2) Player1  | player1 >=4 && player2 >=4 && player1 > player2 = Set Player1 
 updateSetScore (NormalSetScore player1 player2) Player2  | player1 >=4 && player2 >=4 && player2 > player1 = Set Player2 
-updateSetScore (NormalSetScore player1 5) Player1  = Set Player1
-updateSetScore (NormalSetScore player1 5) Player2  = Set Player2
+updateSetScore (NormalSetScore 5 _) Player1  = Set Player1
+updateSetScore (NormalSetScore _ 5) Player2  = Set Player2
 
 updateSetScore (NormalSetScore player1 player2) Player1  = NormalSetScore (player1 + 1) player2
 updateSetScore (NormalSetScore player1 player2) Player2  = NormalSetScore player1 (player2 + 1)
+
+updateSetScore (Set _) player = updateSetScore (NormalSetScore 0 0) player
 
 newGame = (Normal Love Love)
 newSet = (NormalSetScore 0 0)
 
 updatePointScore :: GameScore -> Player -> GameScore
+updatePointScore (Advantage Player1) Player1 = Game Player1
+updatePointScore (Advantage Player2) Player2 = Game Player2
+updatePointScore (Normal player1 Forty) Player2 = Game Player2
+updatePointScore (Normal Forty _) Player1 = Game Player1
+
 updatePointScore (Advantage Player2) Player1 = Deuce
 updatePointScore (Advantage Player1) Player2 = Deuce
 
@@ -41,6 +48,19 @@ updatePointScore (Normal Thirty player2) Player1 = (Normal Forty player2)
 updatePointScore (Normal player1 Love) Player2 = (Normal player1 Fifteen)
 updatePointScore (Normal player1 Fifteen) Player2 = (Normal player1 Thirty)
 updatePointScore (Normal player1 Thirty) Player2 = (Normal player1 Forty)
+
+updatePointScore (Game _) player  = updatePointScore (Normal Love Love) player
+
+isGame :: GameScore -> Bool
+isGame (Game _) = True 
+isGame _ = False
+
+isSet :: SetScore -> Bool
+isSet (Set _) = True 
+isSet _ = False
+
+--isSet set = set /= (Set _)
+
 
 update :: Overall -> Player -> Overall
 update (OverallScore matchScore (NormalSetScore player1 player2) _) Player1
@@ -58,6 +78,13 @@ noScore = OverallScore (NormalMatchScore 0 0) (NormalSetScore 0 0) (Normal Love 
 go = Prelude.scanl (\score  point -> update score point) noScore player1MostlyWins
 
 player1MostlyWins = Data.List.foldl (++) []  [[Player1, Player2, Player1] | x <- [1..100]]
+
+games = filter isGame (Prelude.scanl (\score  game -> updatePointScore score game) (Normal Love Love) player1MostlyWins)
+sets = filter isSet (Prelude.scanl (\score  game -> updateSetScore score game) (NormalSetScore 0 0) (map getWinningPlayer games)) 
+
+getWinningPlayer :: GameScore -> Player
+getWinningPlayer (Game player) = player
+getWinningPlayer _ = error "this should never happen"
 
 --how do I generate a sequence of Player1's?
 --how do I alternate between Player1 winning and then Player2?
