@@ -1,21 +1,8 @@
 import Data.Array
 import PrintArray
 
-data Colour = White | Black | Blue | Green
+data Colour = White | Black | Blue | Green | Red deriving (Show, Eq)
  
-instance Show Colour where  
-    show White = "W" 
-    show Black = "Bk"
-    show Blue = "Bl"
-    show Green = "G"  
-
-instance Eq Colour where
-	White == White = True
-	Black == Black = True
-	Blue == Blue = True
-	Green == Green = True
-	_ == _ = False    
-
 inBounds :: Array (Int, Int) Colour -> (Int, Int) -> Bool
 inBounds grid (x, y) = x >= lowx && x <= highx && y >= lowy && y <= highy
 	where ((lowx, lowy), (highx, highy)) =  bounds grid
