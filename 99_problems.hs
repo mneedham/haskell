@@ -81,23 +81,23 @@ groups :: Int -> [a] -> [[a]]
 groups size [] = []
 groups size ls@(x:xs) = (take size ls) : groups size (drop (size-1) xs)
 
-globalQ = 486677217
+globalQ = 1920475943
 globalR = 256
 
-rabinKarp4 :: String -> String -> Int
+rabinKarp4 :: String -> String -> [Int]
 rabinKarp4 text pattern = 
-	if n < m 
-		then -1
+	if n < m  then [-1]
 	else 
-		if found initialTextHash text 0 then 0
+		if found initialTextHash text 0 then [0]
 		else
-			head $ (map fst $ filter (\(idx, hash) -> found hash text idx) $ zip [0..] $ scanl nextHash initialTextHash (windowed (m + 1) text)) ++ [-1]		 	
+			scanl nextHash initialTextHash (windowed (m + 1) text)
+			--head $ (map fst $ filter (\(idx, hash) -> found hash text idx) $ zip [0..] $ scanl nextHash initialTextHash (windowed (m + 1) text)) ++ [-1]		 	
 	where n = length text
 	      m = length pattern
 	      initialTextHash = hash text m
 	      patternHash = hash pattern m
 	      found textHash text offset = (patternHash == textHash) && (pattern == subString text offset m)
-	      nextHash currentHash chars = reHash currentHash (head chars) (last chars) m
+	      nextHash currentHash chars = reHash4 currentHash (head chars) (last chars) m
 	      
 subString text start end = (take end $ (drop start) text)
 
@@ -105,18 +105,30 @@ windowed :: Int -> [a] -> [[a]]
 windowed size [] = []
 windowed size ls@(x:xs) = if length ls >= size then (take size ls) : windowed size xs else windowed size xs	
 
---hash = hash' 256 globalQ
---hash' r q string m = foldl (\acc x -> (r * acc + ord x) `mod` q) 0 $ take m string
+hash = hash' 256 globalQ
+hash' r q string m = foldl (\acc x -> (r * acc + ord x) `mod` q) 0 $ take m string
 
-hash = hash' globalR globalQ
-hash' r q string m = (flip mod q . sum . map hashForChar . zip descendingPowersOfM) string
+hash2 = hash' globalR globalQ
+hash2' r q string m = (flip mod q . sum . map hashForChar . zip descendingPowersOfM) string
 	where descendingPowersOfM = [r ^ pow | pow <- [m-1, m-2..0]]
 	      hashForChar (multiplier, char) = ord char * multiplier
 
+--reHash :: Int -> Char -> Char -> Int -> Int
 reHash = reHash' globalR globalQ
 reHash' r q existingHash firstChar nextChar m = 
-	(removeLeading * r + next) `mod` q
-	where 
-		rm = r ^ (m-1)
-		removeLeading = (existingHash + q - rm * (ord firstChar)) `mod` q
-		next = (ord nextChar)
+	--((existingHash + q - rm * (ord firstChar)) `mod` q * r + (ord nextChar)) `mod` q
+	((existingHash + (fromIntegral q) - (fromIntegral rm) * (ord firstChar)) `mod` (fromIntegral q) * (fromIntegral r) + (ord nextChar)) `mod` (fromIntegral q)
+	where rm = (r ^ (m-1)) `mod` q
+
+	--((existingHash + q - rm * (ord firstChar)) `mod` q * r + (ord nextChar)) `mod` q	
+
+reHash3 = reHash3' globalR globalQ
+reHash3' r q existingHash m = 
+	((existingHash + (fromIntegral q) - (fromIntegral rm) * 109) `mod` (fromIntegral q) * (fromIntegral r) + 101) `mod` (fromIntegral q)
+	where rm = (fromIntegral r ^ fromIntegral (m-1)) `mod` fromIntegral q 
+	
+
+reHash4 = reHash4' globalR globalQ
+reHash4' r q existingHash firstChar nextChar m = 
+	((existingHash + (fromIntegral q) - (fromIntegral rm) * (ord firstChar)) `mod` (fromIntegral q) * (fromIntegral r) + (ord nextChar)) `mod` (fromIntegral q)
+	where rm = (fromIntegral r ^ fromIntegral (m-1)) `mod` fromIntegral q 	
