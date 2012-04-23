@@ -88,19 +88,15 @@ globalR = 256
 
 rabinKarp4 :: String -> String -> Int
 rabinKarp4 text pattern = 
-	if n < m  then -1
-	else 
-		let matchingPosition = map fst $ catMaybes $ [find (\(idx, hash) -> found hash text idx) $ zip [0..] $ scanl nextHash initialTextHash (windowed (m + 1) text)] in
-		if length matchingPosition == 0 
-			then -1
-		else
-			head matchingPosition 						
+	fromMaybe (-1) $ myMap fst $ find (\(idx, hash) -> matching hash text idx) $ zip [0..] $ scanl nextHash initialTextHash (windowed (m + 1) text) 						
 	where n = length text
 	      m = length pattern
 	      initialTextHash = hash text m
 	      patternHash = hash pattern m
-	      found textHash text offset = (patternHash == textHash) && (pattern == subString text offset m)
+	      matching textHash text offset = (patternHash == textHash) && (pattern == subString text offset m)
 	      nextHash currentHash chars = reHash4 currentHash (head chars) (last chars) m
+	      myMap fn (Just x) = Just (fn x)
+	      myMap fn (Nothing) = Nothing
 	      
 subString text start end = (take end $ (drop start) text)
 
