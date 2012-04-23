@@ -1,5 +1,7 @@
 import Data.HashTable
 import Data.Char
+import Data.List
+import Data.Maybe
 
 
 dupli [] = []
@@ -84,14 +86,15 @@ groups size ls@(x:xs) = (take size ls) : groups size (drop (size-1) xs)
 globalQ = 1920475943
 globalR = 256
 
-rabinKarp4 :: String -> String -> [Int]
+rabinKarp4 :: String -> String -> Int
 rabinKarp4 text pattern = 
-	if n < m  then [-1]
+	if n < m  then -1
 	else 
-		if found initialTextHash text 0 then [0]
+		let matchingPosition = map fst $ catMaybes $ [find (\(idx, hash) -> found hash text idx) $ zip [0..] $ scanl nextHash initialTextHash (windowed (m + 1) text)] in
+		if length matchingPosition == 0 
+			then -1
 		else
-			scanl nextHash initialTextHash (windowed (m + 1) text)
-			--head $ (map fst $ filter (\(idx, hash) -> found hash text idx) $ zip [0..] $ scanl nextHash initialTextHash (windowed (m + 1) text)) ++ [-1]		 	
+			head matchingPosition 						
 	where n = length text
 	      m = length pattern
 	      initialTextHash = hash text m
@@ -132,3 +135,12 @@ reHash4 = reHash4' globalR globalQ
 reHash4' r q existingHash firstChar nextChar m = 
 	((existingHash + (fromIntegral q) - (fromIntegral rm) * (ord firstChar)) `mod` (fromIntegral q) * (fromIntegral r) + (ord nextChar)) `mod` (fromIntegral q)
 	where rm = (fromIntegral r ^ fromIntegral (m-1)) `mod` fromIntegral q 	
+
+reHash5 = reHash5' globalR globalQ
+reHash5' r q existingHash firstChar nextChar m = 
+	((existingHash + (fromIntegral q) - (fromIntegral rm) * (ord firstChar)) `mod` (fromIntegral q) * (fromIntegral r) + (ord nextChar)) `mod` (fromIntegral q)
+	where rm = (r ^  (m-1)) `mod` q 	
+
+rm :: Int -> Int -> Int -> Int
+rm r m q = (r ^ (m-1)) `mod` q 		
+rm2 r m q = (fromIntegral r ^ fromIntegral (m-1)) `mod` fromIntegral q 	
