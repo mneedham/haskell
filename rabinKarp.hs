@@ -38,8 +38,9 @@ reHash' r q existingHash firstChar nextChar m =
 		rm = if m >0 then (fromIntegral r ^ fromIntegral (m-1)) `mod` fromIntegral q else 0
 		takeOffFirstChar = existingHash - fromIntegral rm * ord firstChar
 
-hash2 = hash2' globalR globalQ
-hash2' r q string m = (flip mod q . sum . map (\(pow, char) -> ord char * (r ^ pow)) . zip [pow | pow <- [m-1, m-2..0]]) string
+--hash2 :: [Char] -> Int -> Int
+hash2 = hash2' 256 1920475943	
+hash2' r q string m = toInteger $ (flip mod q . sum . map (\(pow, char) -> fromIntegral (ord char) * fromIntegral (r ^ pow)) . zip [m-1, m-2..0]) string
 
 
 getLines = (liftM lines . readFile)
@@ -52,7 +53,7 @@ main = do
 		if length args < 2 then putStrLn "Usage: ./rabinKarp pattern file"
 		else
 			do				
-				let (pattern:file:[]) = args
+				let (pattern:file:_) = args
 				    m = length pattern				    
 				lines <- getLines file
 				mapM_ (printFriendly m) . filter matchingLines . map (\(idx, line) -> (idx, line, rabinKarp line pattern)) . (zip [1..]) $ lines		
