@@ -38,10 +38,20 @@ reHash' r q existingHash firstChar nextChar m =
 		rm = if m >0 then (fromIntegral r ^ fromIntegral (m-1)) `mod` fromIntegral q else 0
 		takeOffFirstChar = existingHash - fromIntegral rm * ord firstChar
 
-hash2 :: [Char] -> Int -> Int
-hash2 = hash2' 256  1920475943	
-hash2' r q string m = fromIntegral $ (flip mod q . sum . map (\(pow, char) -> fromIntegral (ord char) * fromIntegral (r ^ pow)) . zip [m-1, m-2..0]) string
+hash3 :: [Char] -> Int -> Int
+hash3 = hash3' globalR  globalQ	
+hash3' r q string m = fromIntegral $ (flip mod q . sum . map (\(pow, char) -> fromIntegral (ord char) * fromIntegral (r ^ pow)) . zip [m-1, m-2..0]) string
 
+hash2 :: [Char] -> Int -> Int
+hash2 = hash2' globalR  globalQ	
+hash2' r q string m = (flip mod q . sum . map (\(pow, char) -> ord char *  (r ^ pow)) . zip [m-1, m-2..0]) string
+
+hash4 :: [Char] -> Int -> Int
+hash4 value m = fromInteger $ hash4' (toInteger globalR) (toInteger globalQ) value m	
+hash4' :: Integer -> Integer -> [Char] -> Int -> Integer
+hash4' r q string m = (sum $ map (\(pow, char) -> toInteger (ord char) *  toInteger (r ^ pow)) $ zip [m-1, m-2..0] string) `mod` q
+
+hash5' r q value m = fromInteger (sum $ map (\(pow, char) -> toInteger (ord char) * toInteger (r ^ pow)) $ zip [m-1, m-2..0] value) `mod` (toInteger q)
 
 getLines = (liftM lines . readFile)
 
