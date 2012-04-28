@@ -63,12 +63,13 @@ main = do
 		if length args < 2 then putStrLn "Usage: ./rabinKarp pattern file"
 		else
 			do				
-				let (pattern:file:_) = args
+				let (file:pattern:_) = args
 				    m = length pattern				    
 				lines <- getLines file
-				mapM_ (printFriendly m) . filter matchingLines . map (\(idx, line) -> (idx, line, rabinKarp line pattern)) . (zip [1..]) $ lines		
-				where printFriendly m (idx, line, match) = putStrLn (flatten [show idx, " ", take match line, greenify (subString line match m), drop (match + m) line])
-				      matchingLines (_,_, match) = match /= -1
+				putStrLn  $ fromMaybe noMatch . mapOnMaybe (format m) . find aMatch . map (\(idx, line) -> (idx, line, rabinKarp line pattern)) . (zip [1..]) $ lines		
+				where format m (idx, line, match) = flatten [show idx, " ", take match line, greenify (subString line match m), drop (match + m) line]
+				      aMatch (_,_, match) = match /= -1
+				      noMatch = "No match found"
 				      
 
 --reHash = reHash' globalR globalQ
