@@ -38,9 +38,9 @@ reHash' r q existingHash firstChar nextChar m =
 		rm = if m >0 then (fromIntegral r ^ fromIntegral (m-1)) `mod` fromIntegral q else 0
 		takeOffFirstChar = existingHash - fromIntegral rm * ord firstChar
 
---hash2 :: [Char] -> Int -> Int
-hash2 = hash2' 256 1920475943	
-hash2' r q string m = toInteger $ (flip mod q . sum . map (\(pow, char) -> fromIntegral (ord char) * fromIntegral (r ^ pow)) . zip [m-1, m-2..0]) string
+hash2 :: [Char] -> Int -> Int
+hash2 = hash2' 256  1920475943	
+hash2' r q string m = fromIntegral $ (flip mod q . sum . map (\(pow, char) -> fromIntegral (ord char) * fromIntegral (r ^ pow)) . zip [m-1, m-2..0]) string
 
 
 getLines = (liftM lines . readFile)
