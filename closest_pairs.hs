@@ -16,17 +16,50 @@ bfClosest pairs =
 --dcClosest :: (Ord a, Floating a) => [(a, a)] -> Maybe ((a, a), (a, a))
 --dcClosest pairs = 
 --	let (leftByX:rightByX) = chunk (length sortedByX `div` 2) sortedByX
---	    leftResult = dcClosest(leftByX)
---	    rightResult = dcClosest(rightByX)
+--	    leftResult = dcClosest leftByX
+--	    rightResult = dcClosest rightByX
 --		(leftp1,leftp2) = fromJust leftResult
 --		(rightp1,rightp2) = fromJust rightResult
 --		result = if distance leftp1 leftp2 < distance rightp1 rightp2 then (leftp1, leftp2) else (rightp1, rightp2)
 --	    midX = fst $ last leftByX
 --	    bandwidth = distance (fst result) (snd result)
 --	    inBandByX = filter (\p -> abs (midX - fst p) <= bandwidth) sortedByX
---	    inBandByY = sortBy (compare `on` snd) inBandByX
+--	    inBandByY = sortBy (compare `on` snd) inBandByX in
 	    
+--	    scanl (\(close, dist) p -> 
+--				let pDistance = distance (p !! 1) (p !! 0) in
+--				if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
+--				then (Just(p!!0, p!!1), pDistance) 
+--				else  (close,dist)) 
+--	  	      (Just(result), bandwidth) 
+--	  		  (windowed 2 inBandByY)
+
 --	where sortedByX = sortBy compare pairs
+
+dcClosest :: (Ord a, Floating a) => [(a, a)] -> Maybe ((a, a), (a, a))
+dcClosest pairs = 	    
+	if length sortedByX <=4 then bfClosest sortedByX
+	else
+		fst $ last $ scanl (\(close, dist) p -> 
+					let pDistance = distance (p !! 1) (p !! 0) in
+					if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
+					then (Just(p!!0, p!!1), pDistance) 
+					else  (close,dist)) 
+	  	  	(Just(result), bandwidth) 
+	      	(windowed 2 inBandByY)
+
+	where sortedByX = sortBy compare pairs
+	      byX = chunk (length sortedByX `div` 2) sortedByX
+	      leftResult = dcClosest (byX !! 0)	      
+	      (leftp1,leftp2) =  fromJust leftResult 
+	      rightResult = dcClosest (byX !! 1)
+	      (rightp1,rightp2) = fromJust rightResult
+	      result = if distance leftp1 leftp2 < distance rightp1 rightp2 then (leftp1, leftp2) else (rightp1, rightp2)
+	      midX = fst $ last (byX !! 0)
+	      bandwidth = distance (fst result) (snd result)
+	      inBandByX = filter (\p -> abs (midX - fst p) <= bandwidth) sortedByX
+	      inBandByY = sortBy (compare `on` snd) inBandByX
+	      	
 
 distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
 
@@ -72,4 +105,4 @@ normals = mapM (\_ -> randPair) $ repeat ()
 main = do 
 	args <- getArgs
 	let numberOfPairs = read (head args) :: Int
-	putStrLn $ show (fromJust (bfClosest $ take numberOfPairs $ runRandom normals 42))
+	putStrLn $ show (fromJust (dcClosest $ take numberOfPairs $ runRandom normals 42))
