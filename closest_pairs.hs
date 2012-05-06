@@ -42,23 +42,20 @@ type Point a = (a, a)
 
 dcClosest2 :: (Ord a, Floating a) => [Point a] -> Maybe (Point a, Point a)
 dcClosest2 pairs = 	    
-	if length sortedByX <=4 then bfClosest sortedByX
+	if length sortedByX <= 4 then bfClosest sortedByX
 	else
 		fst $ last $ scanl (\(close, dist) p -> 
-					let pDistance = distance2 (p !! 1) (p !! 0) in
-					if pDistance <  distance2 (fst $ fromJust close) (snd $ fromJust close) 
-					then (Just(p!!0, p!!1), pDistance) 
-					else  (close,dist)) 
-	  	  	(Just(result), bandwidth) 
+					let pDistance = distance3 ((p !! 1), (p !! 0)) in
+					if pDistance <  distance3 (fromJust close) then (Just (p!!0, p!!1), pDistance)  else  (close,dist)) 
+	  	  	(Just(closestPair), bandwidth) 
 	      	(windowed 2 inBandByY)
-
 	where sortedByX = sortBy compare pairs	      
 	      (leftByX:rightByX:_) = chunk (length sortedByX `div` 2) sortedByX
-	      (leftp1,leftp2) =  fromJust $ dcClosest2 leftByX
-	      (rightp1,rightp2) = fromJust $ dcClosest2 rightByX
-	      result = if distance2 leftp1 leftp2 < distance2 rightp1 rightp2 then (leftp1, leftp2) else (rightp1, rightp2)
+	      closestLeftPair =  fromJust $ dcClosest2 leftByX
+	      closestRightPair = fromJust $ dcClosest2 rightByX
+	      closestPair = if distance3 closestLeftPair < distance3 closestRightPair then closestLeftPair else closestRightPair
 	      midX = fst $ last leftByX
-	      bandwidth = distance2 (fst result) (snd result)
+	      bandwidth = distance3 closestPair
 	      inBandByX = filter (\p -> abs (midX - fst p) <= bandwidth) sortedByX
 	      inBandByY = sortBy (compare `on` snd) inBandByX	      
 	      	
@@ -68,6 +65,9 @@ distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
 
 distance2 :: Floating a => Point a -> Point a -> a
 distance2 (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
+
+distance3 :: Floating a => (Point a, Point a) -> a
+distance3 ((x1, y1), (x2, y2)) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
 
 --scanl (\(close, dist) p ->  (close,dist)) (Just((0,0), (5,5)), distance (0,0) (5,5)) blah
 
