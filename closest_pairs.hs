@@ -36,6 +36,28 @@ dcClosest pairs =
 	      bandwidth = distance (fst result) (snd result)
 	      inBandByX = filter (\p -> abs (midX - fst p) <= bandwidth) sortedByX
 	      inBandByY = sortBy (compare `on` snd) inBandByX
+
+dcClosest2 :: (Ord a, Floating a) => [(a, a)] -> Maybe ((a, a), (a, a))
+dcClosest2 pairs = 	    
+	if length sortedByX <=4 then bfClosest sortedByX
+	else
+		fst $ last $ scanl (\(close, dist) p -> 
+					let pDistance = distance (p !! 1) (p !! 0) in
+					if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
+					then (Just(p!!0, p!!1), pDistance) 
+					else  (close,dist)) 
+	  	  	(Just(result), bandwidth) 
+	      	(windowed 2 inBandByY)
+
+	where sortedByX = sortBy compare pairs	      
+	      (leftByX:rightByX:_) = chunk (length sortedByX `div` 2) sortedByX
+	      (leftp1,leftp2) =  fromJust $ dcClosest2 leftByX
+	      (rightp1,rightp2) = fromJust $ dcClosest2 rightByX
+	      result = if distance leftp1 leftp2 < distance rightp1 rightp2 then (leftp1, leftp2) else (rightp1, rightp2)
+	      midX = fst $ last leftByX
+	      bandwidth = distance (fst result) (snd result)
+	      inBandByX = filter (\p -> abs (midX - fst p) <= bandwidth) sortedByX
+	      inBandByY = sortBy (compare `on` snd) inBandByX	      
 	      	
 
 distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
@@ -82,4 +104,4 @@ main = do
 	if length args > 1 && args !! 1 == "bf" then 
 		putStrLn $ show (fromJust (bfClosest $ take numberOfPairs $ runRandom normals 42))
 	else 
-		putStrLn $ show (fromJust (dcClosest $ take numberOfPairs $ runRandom normals 42))
+		putStrLn $ show (fromJust (dcClosest2 $ take numberOfPairs $ runRandom normals 42))
