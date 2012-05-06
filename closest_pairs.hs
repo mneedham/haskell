@@ -13,29 +13,6 @@ bfClosest pairs =
 		  (2^64, Nothing) 
 		  [(pairs !! i, pairs !! j) | i <- [0..length pairs - 1], j <- [0..length pairs-1 ], i /= j]
 
---dcClosest :: (Ord a, Floating a) => [(a, a)] -> Maybe ((a, a), (a, a))
---dcClosest pairs = 
---	let (leftByX:rightByX) = chunk (length sortedByX `div` 2) sortedByX
---	    leftResult = dcClosest leftByX
---	    rightResult = dcClosest rightByX
---		(leftp1,leftp2) = fromJust leftResult
---		(rightp1,rightp2) = fromJust rightResult
---		result = if distance leftp1 leftp2 < distance rightp1 rightp2 then (leftp1, leftp2) else (rightp1, rightp2)
---	    midX = fst $ last leftByX
---	    bandwidth = distance (fst result) (snd result)
---	    inBandByX = filter (\p -> abs (midX - fst p) <= bandwidth) sortedByX
---	    inBandByY = sortBy (compare `on` snd) inBandByX in
-	    
---	    scanl (\(close, dist) p -> 
---				let pDistance = distance (p !! 1) (p !! 0) in
---				if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
---				then (Just(p!!0, p!!1), pDistance) 
---				else  (close,dist)) 
---	  	      (Just(result), bandwidth) 
---	  		  (windowed 2 inBandByY)
-
---	where sortedByX = sortBy compare pairs
-
 dcClosest :: (Ord a, Floating a) => [(a, a)] -> Maybe ((a, a), (a, a))
 dcClosest pairs = 	    
 	if length sortedByX <=4 then bfClosest sortedByX
@@ -65,18 +42,15 @@ distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
 
 --scanl (\(close, dist) p ->  (close,dist)) (Just((0,0), (5,5)), distance (0,0) (5,5)) blah
 
-x = scanl (\(close, dist) p -> 
-		let pDistance = distance (p !! 1) (p !! 0) in
-		if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
-		then (Just(p!!0, p!!1), pDistance) 
-		else  (close,dist)) 
-	  (Just((0,0), (5,5)), 7.0710678118654755) 
-	  [[(0,0),(1,1)],[(1,1),(2,2)], [(1.1,1.1),(1.2,2)], [(1.7,1.1),(1.2,2)]]
+--x = scanl (\(close, dist) p -> 
+--		let pDistance = distance (p !! 1) (p !! 0) in
+--		if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
+--		then (Just(p!!0, p!!1), pDistance) 
+--		else  (close,dist)) 
+--	  (Just((0,0), (5,5)), 7.0710678118654755) 
+--	  [[(0,0),(1,1)],[(1,1),(2,2)], [(1.1,1.1),(1.2,2)], [(1.7,1.1),(1.2,2)]]
 
 --(distance (p !! 1) (p !! 0)) <  (distance (fst close) (snd close))
-
-
-
 
 windowed :: Int -> [a] -> [[a]]
 windowed size [] = []
@@ -105,4 +79,7 @@ normals = mapM (\_ -> randPair) $ repeat ()
 main = do 
 	args <- getArgs
 	let numberOfPairs = read (head args) :: Int
-	putStrLn $ show (fromJust (dcClosest $ take numberOfPairs $ runRandom normals 42))
+	if length args > 1 && args !! 1 == "bf" then 
+		putStrLn $ show (fromJust (bfClosest $ take numberOfPairs $ runRandom normals 42))
+	else 
+		putStrLn $ show (fromJust (dcClosest $ take numberOfPairs $ runRandom normals 42))
