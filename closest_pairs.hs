@@ -40,24 +40,18 @@ dcClosest pairs =
 --data (Num a, Floating a) => Point a = Point { x :: a , y :: a }
 type Point a = (a, a)
 
-dcClosest2 :: (Ord a, Floating a) => [Point a] -> Maybe (Point a, Point a)
+dcClosest2 :: (Ord a, Floating a) => [Point a] -> (Point a, Point a)
 dcClosest2 pairs = 	    
-	if length sortedByX <= 4 then bfClosest sortedByX
-	else
-		fst $ last $ scanl (\(close, dist) p -> 
-					let pDistance = distance3 ((p !! 1), (p !! 0)) in
-					if pDistance <  distance3 (fromJust close) then (Just (p!!0, p!!1), pDistance)  else  (close,dist)) 
-	  	  	(Just(closestPair), bandwidth) 
-	      	(windowed 2 inBandByY)
+	if length sortedByX <= 4 then fromJust $ bfClosest sortedByX
+	else last $ scanl (\closest (p1:p2:_) -> if distance3 (p1, p2) < distance3 closest then (p1, p2) else closest) closestPair (windowed 2 pairsWithinMinimumDelta)
 	where sortedByX = sortBy compare pairs	      
 	      (leftByX:rightByX:_) = chunk (length sortedByX `div` 2) sortedByX
-	      closestLeftPair =  fromJust $ dcClosest2 leftByX
-	      closestRightPair = fromJust $ dcClosest2 rightByX
+	      closestLeftPair =  dcClosest2 leftByX
+	      closestRightPair = dcClosest2 rightByX
 	      closestPair = if distance3 closestLeftPair < distance3 closestRightPair then closestLeftPair else closestRightPair
 	      midX = fst $ last leftByX
-	      bandwidth = distance3 closestPair
-	      inBandByX = filter (\p -> abs (midX - fst p) <= bandwidth) sortedByX
-	      inBandByY = sortBy (compare `on` snd) inBandByX	      
+	      smallestDistance = distance3 closestPair
+	      pairsWithinMinimumDelta = sortBy (compare `on` snd) $ filter (\(x,y) -> abs (midX - x) <= smallestDistance) sortedByX
 	      	
 
 distance :: Floating a => (a, a) -> (a, a) -> a
@@ -109,6 +103,6 @@ main = do
 	args <- getArgs
 	let numberOfPairs = read (head args) :: Int
 	if length args > 1 && args !! 1 == "bf" then 
-		putStrLn $ show (fromJust (bfClosest $ take numberOfPairs $ runRandom normals 42))
+		putStrLn $ show ( (bfClosest $ take numberOfPairs $ runRandom normals 42))
 	else 
-		putStrLn $ show (fromJust (dcClosest2 $ take numberOfPairs $ runRandom normals 42))
+		putStrLn $ show ( (dcClosest2 $ take numberOfPairs $ runRandom normals 42))
