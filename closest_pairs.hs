@@ -47,12 +47,12 @@ type Point a = (a, a)
 dcClosest :: (Ord a, Floating a) => [Point a] -> (Point a, Point a)
 dcClosest pairs
 	| length pairs <= 3 = fromJust $ bfClosest pairs    
-	| otherwise = foldl (\closest (p1:p2:_) -> if distance (p1, p2) < distance closest then (p1, p2) else closest) 
+	| otherwise = foldl (\closest (p1:p2:_) -> minimumBy (compare `on` distance) [closest, (p1, p2)])
 	                    closestPair 
 	                    (windowed 2 pairsWithinMinimumDelta)
 	where sortedByX = sortBy compare pairs	      
-	      (leftByX:rightByX:_) = chunk (length sortedByX `div` 2) sortedByX	      
-	      closestPair = if distance closestLeftPair < distance closestRightPair then closestLeftPair else closestRightPair  	      	
+	      (leftByX:rightByX:_) = chunk (length sortedByX `div` 2) sortedByX	      	      
+	      closestPair = minimumBy (compare `on` distance) [closestLeftPair, closestRightPair]
 	      	where closestLeftPair =  dcClosest leftByX
 	              closestRightPair = dcClosest rightByX	 	      	        
 	      pairsWithinMinimumDelta = sortBy (compare `on` snd) $ filter withinMinimumDelta sortedByX
