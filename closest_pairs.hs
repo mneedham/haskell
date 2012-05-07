@@ -35,9 +35,11 @@ import Data.Function
 
 bfClosest :: (Ord a, Floating a) => [(a, a)] -> Maybe ((a, a), (a, a))
 bfClosest pairs = 
-	snd $ foldl (\ acc@(min, soFar) (p1, p2) -> if distance p1 p2 < min then (distance p1 p2, Just(p1, p2)) else acc) 
-		  (2^64, Nothing) 
-		  [(pairs !! i, pairs !! j) | i <- [0..length pairs - 1], j <- [0..length pairs-1 ], i /= j]
+	snd $ foldl (\ acc@(min, soFar) (p1, p2) -> 
+					if distance p1 p2 < min then (distance p1 p2, Just(p1, p2)) else acc) 
+		        (fromIntegral (maxBound :: Int), Nothing) 
+		        [(pairs !! i, pairs !! j) | i <- [0..length pairs - 1], j <- [0..length pairs-1 ], i /= j]
+    where distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
 
 type Point a = (a, a)
 
