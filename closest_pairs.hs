@@ -41,29 +41,35 @@ bfClosest pairs =
 		        [(pairs !! i, pairs !! j) | i <- [0..length pairs - 1], j <- [0..length pairs-1 ], i /= j]
     where distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
 
+
 type Point a = (a, a)
 
 dcClosest :: (Ord a, Floating a) => [Point a] -> (Point a, Point a)
-dcClosest pairs = 	    
-	if length sortedByX <= 3 then fromJust $ bfClosest sortedByX
-	else foldl (\closest (p1:p2:_) -> if distance (p1, p2) < distance closest then (p1, p2) else closest) closestPair (windowed 2 pairsWithinMinimumDelta)
+dcClosest pairs
+	| length pairs <= 3 = fromJust $ bfClosest pairs    
+	| otherwise = foldl (\closest (p1:p2:_) -> if distance (p1, p2) < distance closest then (p1, p2) else closest) 
+	                    closestPair 
+	                    (windowed 2 pairsWithinMinimumDelta)
 	where sortedByX = sortBy compare pairs	      
-	      (leftByX:rightByX:_) = chunk (length sortedByX `div` 2) sortedByX
-	      distance ((x1, y1), (x2, y2)) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)	      
-	      pairsWithinMinimumDelta = sortBy (compare `on` snd) $ filter withinMinimumDelta sortedByX
-	      withinMinimumDelta (x, _) = abs ((fst . last) leftByX - x) <= distance closestPair
-	      closestLeftPair =  dcClosest leftByX
-	      closestRightPair = dcClosest rightByX	      
+	      (leftByX:rightByX:_) = chunk (length sortedByX `div` 2) sortedByX	      
 	      closestPair = if distance closestLeftPair < distance closestRightPair then closestLeftPair else closestRightPair  	      	
+	      	where closestLeftPair =  dcClosest leftByX
+	              closestRightPair = dcClosest rightByX	 	      	        
+	      pairsWithinMinimumDelta = sortBy (compare `on` snd) $ filter withinMinimumDelta sortedByX
+	        where withinMinimumDelta (x, _) = abs (xMidPoint - x) <= distance closestPair	
+	                where (xMidPoint, _) = last leftByX
 
-distance :: Floating a => (a, a) -> (a, a) -> a
-distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
+distance :: Floating a => (Point a, Point a) -> a
+distance ((x1, y1), (x2, y2)) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)	      	      	           
 
-distance2 :: Floating a => Point a -> Point a -> a
-distance2 (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
+--distance :: Floating a => (a, a) -> (a, a) -> a
+--distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
 
-distance3 :: Floating a => (Point a, Point a) -> a
-distance3 ((x1, y1), (x2, y2)) = sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
+--distance2 :: Floating a => Point a -> Point a -> a
+--distance2 (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
+
+--distance3 :: Floating a => (Point a, Point a) -> a
+--distance3 ((x1, y1), (x2, y2)) = sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
 
 --scanl (\(close, dist) p ->  (close,dist)) (Just((0,0), (5,5)), distance (0,0) (5,5)) blah
 
