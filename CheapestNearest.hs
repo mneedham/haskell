@@ -1,5 +1,6 @@
 import Data.List
 import Data.Ord
+import Data.Monoid
 
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.QuickCheck (testProperty)
@@ -24,18 +25,26 @@ tests = [
 
 data Row = Row { shortListed :: Bool, cost :: Float, localTailDistance :: Int, backhaulDistance :: Int } deriving (Show, Eq)
 
-compareRow :: Row -> Row -> Ordering
-compareRow x y = if comparing (not . shortListed) x y == EQ then 
-					if comparing cost x y == EQ then
+compareRow2 x y = if comparing (not . shortListed) x y == EQ then 
+                  	if comparing cost x y == EQ then
 						if comparing localTailDistance x y == EQ then
 							comparing backhaulDistance x y
 						else
 							comparing localTailDistance x y
 					else
 						comparing cost x y
-				 else 
-				 	comparing (not . shortListed) x y
+				  else 
+					comparing (not . shortListed) x y
 
+compareRow :: Row -> Row -> Ordering
+--compareRow x y = comparing (not . shortListed) x y `mappend` comparing cost x y `mappend` comparing localTailDistance x y `mappend` comparing backhaulDistance x y 
+--compareRow x y = mconcat [comparing (not . shortListed) x y,  comparing cost x y, comparing localTailDistance x y, comparing backhaulDistance x y]
+--compareRow x y = foldr (\ fn acc -> comparing fn x y `mappend` acc) mempty ([(not . shortListed), cost, localTailDistance, backhaulDistance] :: [Row -> Ordering])
+--compareRow x y = foldr (\ fn acc -> fn x y `mappend` acc) mempty [by (not . shortListed), by cost, by localTailDistance, by backhaulDistance]
+compareRow x y = mconcat $ map (\fn -> fn x y) [by (not . shortListed), by cost, by localTailDistance, by backhaulDistance]
+
+by :: Ord a => (b -> a) -> b -> b -> Ordering
+by fn x y = comparing fn x y
 
 shortListedRow = Row {shortListed = True, cost = 10.0, localTailDistance = 20, backhaulDistance = 30 }
 nonShortListedRow = Row {shortListed = False, cost = 10.0, localTailDistance = 20, backhaulDistance = 30 }
