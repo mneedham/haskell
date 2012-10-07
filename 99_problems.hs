@@ -88,15 +88,16 @@ globalR = 256
 
 rabinKarp4 :: String -> String -> Int
 rabinKarp4 text pattern = 
-	fromMaybe (-1) $ myMap fst $ find (\(idx, hash) -> matching hash text idx) $ zip [0..] $ scanl nextHash initialTextHash (windowed (m + 1) text) 						
+	if pattern == "" then -1 
+	else fromMaybe (-1) $ mapOnMaybe fst $ find matchingString $ zip [0..] $ scanl nextHash (hash text m) $ windowed (m+1) text					
 	where n = length text
-	      m = length pattern
-	      initialTextHash = hash text m
-	      patternHash = hash pattern m
-	      matching textHash text offset = (patternHash == textHash) && (pattern == subString text offset m)
+	      m = length pattern	      
 	      nextHash currentHash chars = reHash4 currentHash (head chars) (last chars) m
-	      myMap fn (Just x) = Just (fn x)
-	      myMap fn (Nothing) = Nothing
+	      matchingString (idx, textHash) = hash pattern m == textHash && pattern == subString text idx m 
+
+mapOnMaybe :: (a -> b) -> Maybe a -> Maybe b
+mapOnMaybe fn (Just x) = Just (fn x)   
+mapOnMaybe _ (Nothing) = Nothing  
 	      
 subString text start end = (take end $ (drop start) text)
 
@@ -130,7 +131,7 @@ reHash3' r q existingHash m =
 reHash4 = reHash4' globalR globalQ
 reHash4' r q existingHash firstChar nextChar m = 
 	((existingHash + (fromIntegral q) - (fromIntegral rm) * (ord firstChar)) `mod` (fromIntegral q) * (fromIntegral r) + (ord nextChar)) `mod` (fromIntegral q)
-	where rm = (fromIntegral r ^ fromIntegral (m-1)) `mod` fromIntegral q 	
+	where rm = if m >0 then (fromIntegral r ^ fromIntegral (m-1)) `mod` fromIntegral q 	else 0
 
 reHash5 = reHash5' globalR globalQ
 reHash5' r q existingHash firstChar nextChar m = 

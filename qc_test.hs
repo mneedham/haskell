@@ -55,9 +55,12 @@ dcClosest pairs
 	| length pairs <= 3 = 		 
 		fromJust $ bfClosest pairs
 	| otherwise = 		    
-		last $ scanl (\closest (p1,p2) -> minimumBy (compare `on` distance') [closest, P p1 p2])
-	           closestPair 
-	           (combos pairsWithinMinimumDelta)
+		fst $ last $ scanl (\(closest, shouldExit) (p1,p2) -> 
+							  let currentClosest = minimumBy (compare `on` distance') [closest, P p1 p2] in
+							  if abs (yDelta p1 p2)  >= (distance' closestPair) then (closest, True)
+							  else (currentClosest, False))
+	          (closestPair, False)
+	          (combos pairsWithinMinimumDelta)
 	where sortedByX = sortBy compare pairs	      
 	      (leftByX:rightByX:_) = [take (length sortedByX `div` 2) sortedByX, drop (length sortedByX `div` 2) sortedByX]      
 	      closestPair = minimumBy (compare `on` distance') [closestLeftPair, closestRightPair]
@@ -67,8 +70,17 @@ dcClosest pairs
 	        where withinMinimumDelta (x, _) = abs (xMidPoint - x) <= distance' closestPair	
 	                where (xMidPoint, _) = last leftByX
 
+yDelta :: Floating a => Point a -> Point a -> a
+yDelta (x1, y1) (x2, y2) = y2 - y1
+
 distance' :: Floating a => Pair a -> a
 distance' (P (x1, y1) (x2, y2)) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)	 
+
+distance'' :: Floating a => (a, a) -> (a, a) -> a
+distance'' (x1, y1) (x2, y2) = sqrt (dx*dx + dy*dy)
+  where
+    dx = x1-x2
+    dy = y1-y2
 
 
 distance :: Floating a => (Point a, Point a) -> a

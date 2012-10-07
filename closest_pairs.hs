@@ -1,37 +1,10 @@
 import Control.Monad.State (State, evalState, get, put)
 import System.Random (StdGen, mkStdGen, random)
-import Control.Applicative ((<$>))
 import Data.Maybe
 import System
 import Data.List
 import Data.List.Split
 import Data.Function
-
---dcClosest :: (Ord a, Floating a) => [(a, a)] -> Maybe ((a, a), (a, a))
---dcClosest pairs = 	    
---	if length sortedByX <=4 then bfClosest sortedByX
---	else
---		fst $ last $ scanl (\(close, dist) p -> 
---					let pDistance = distance (p !! 1) (p !! 0) in
---					if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
---					then (Just(p!!0, p!!1), pDistance) 
---					else  (close,dist)) 
---	  	  	(Just(result), bandwidth) 
---	      	(windowed 2 inBandByY)
-
---	where sortedByX = sortBy compare pairs
---	      byX = chunk (length sortedByX `div` 2) sortedByX
---	      leftResult = dcClosest (byX !! 0)	      
---	      (leftp1,leftp2) =  fromJust leftResult 
---	      rightResult = dcClosest (byX !! 1)
---	      (rightp1,rightp2) = fromJust rightResult
---	      result = if distance leftp1 leftp2 < distance rightp1 rightp2 then (leftp1, leftp2) else (rightp1, rightp2)
---	      midX = fst $ last (byX !! 0)
---	      bandwidth = distance (fst result) (snd result)
---	      inBandByX = filter (\p -> abs (midX - fst p) <= bandwidth) sortedByX
---	      inBandByY = sortBy (compare `on` snd) inBandByX
-
---data (Num a, Floating a) => Point a = Point { x :: a , y :: a }
 
 bfClosest :: (Ord a, Floating a) => [(a, a)] -> Maybe ((a, a), (a, a))
 bfClosest pairs = 
@@ -61,27 +34,6 @@ dcClosest pairs
 
 distance :: Floating a => (Point a, Point a) -> a
 distance ((x1, y1), (x2, y2)) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)	      	      	           
-
---distance :: Floating a => (a, a) -> (a, a) -> a
---distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
-
---distance2 :: Floating a => Point a -> Point a -> a
---distance2 (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
-
---distance3 :: Floating a => (Point a, Point a) -> a
---distance3 ((x1, y1), (x2, y2)) = sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
-
---scanl (\(close, dist) p ->  (close,dist)) (Just((0,0), (5,5)), distance (0,0) (5,5)) blah
-
---x = scanl (\(close, dist) p -> 
---		let pDistance = distance (p !! 1) (p !! 0) in
---		if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
---		then (Just(p!!0, p!!1), pDistance) 
---		else  (close,dist)) 
---	  (Just((0,0), (5,5)), 7.0710678118654755) 
---	  [[(0,0),(1,1)],[(1,1),(2,2)], [(1.1,1.1),(1.2,2)], [(1.7,1.1),(1.2,2)]]
-
---(distance (p !! 1) (p !! 0)) <  (distance (fst close) (snd close))
 
 windowed :: Int -> [a] -> [[a]]
 windowed size [] = []
@@ -114,3 +66,70 @@ main = do
 		putStrLn $ show ( (bfClosest $ take numberOfPairs $ runRandom normals 42))
 	else 
 		putStrLn $ show ( (dcClosest $ take numberOfPairs $ runRandom normals 42))
+
+myRand :: State StdGen Int
+myRand = do
+	gen <- get
+	let (r, nextGen) = random gen
+	put nextGen
+	return r
+
+myRandPair :: State StdGen (Int, Int)
+myRandPair = do
+	x <- myRand
+	y <- myRand
+	return (x, y)	
+
+--dcClosest :: (Ord a, Floating a) => [(a, a)] -> Maybe ((a, a), (a, a))
+--dcClosest pairs = 	    
+--	if length sortedByX <=4 then bfClosest sortedByX
+--	else
+--		fst $ last $ scanl (\(close, dist) p -> 
+--					let pDistance = distance (p !! 1) (p !! 0) in
+--					if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
+--					then (Just(p!!0, p!!1), pDistance) 
+--					else  (close,dist)) 
+--	  	  	(Just(result), bandwidth) 
+--	      	(windowed 2 inBandByY)
+
+--	where sortedByX = sortBy compare pairs
+--	      byX = chunk (length sortedByX `div` 2) sortedByX
+--	      leftResult = dcClosest (byX !! 0)	      
+--	      (leftp1,leftp2) =  fromJust leftResult 
+--	      rightResult = dcClosest (byX !! 1)
+--	      (rightp1,rightp2) = fromJust rightResult
+--	      result = if distance leftp1 leftp2 < distance rightp1 rightp2 then (leftp1, leftp2) else (rightp1, rightp2)
+--	      midX = fst $ last (byX !! 0)
+--	      bandwidth = distance (fst result) (snd result)
+--	      inBandByX = filter (\p -> abs (midX - fst p) <= bandwidth) sortedByX
+--	      inBandByY = sortBy (compare `on` snd) inBandByX
+
+--data (Num a, Floating a) => Point a = Point { x :: a , y :: a }	
+
+--distance :: Floating a => (a, a) -> (a, a) -> a
+--distance (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
+
+--distance2 :: Floating a => Point a -> Point a -> a
+--distance2 (x1, y1) (x2, y2) =  sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
+
+--distance3 :: Floating a => (Point a, Point a) -> a
+--distance3 ((x1, y1), (x2, y2)) = sqrt $ ((x1 - x2) ^ 2) + ((y1 - y2) ^ 2)
+
+--scanl (\(close, dist) p ->  (close,dist)) (Just((0,0), (5,5)), distance (0,0) (5,5)) blah
+
+--x = scanl (\(close, dist) p -> 
+--		let pDistance = distance (p !! 1) (p !! 0) in
+--		if pDistance <  distance (fst $ fromJust close) (snd $ fromJust close) 
+--		then (Just(p!!0, p!!1), pDistance) 
+--		else  (close,dist)) 
+--	  (Just((0,0), (5,5)), 7.0710678118654755) 
+--	  [[(0,0),(1,1)],[(1,1),(2,2)], [(1.1,1.1),(1.2,2)], [(1.7,1.1),(1.2,2)]]
+
+--(distance (p !! 1) (p !! 0)) <  (distance (fst close) (snd close))
+
+
+--main = do 
+--	let values = mapM (\_ -> myRandPair) $ repeat ()
+--	mapM_ (\r -> putStrLn (show r)) $ evalState values $ mkStdGen 1
+	
+
